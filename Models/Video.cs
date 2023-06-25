@@ -7,6 +7,8 @@ namespace VideoDirectory_Server.Models
         [Key, Required]
         public int Id { get; set; }
         [Required]
+        public Channel Channel { get; set; }
+        [Required]
         public string Title { get; set; }
         [Required]
         public string Url { get; set; }
