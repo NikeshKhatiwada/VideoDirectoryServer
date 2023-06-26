@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace VideoDirectory_Server.Data;
 
-public partial class VideoDirectoryContext : DbContext
+public partial class ApplicationDbContext : DbContext
 {
-    public VideoDirectoryContext()
+    public ApplicationDbContext()
     {
     }
 
-    public VideoDirectoryContext(DbContextOptions<VideoDirectoryContext> options)
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
     }
