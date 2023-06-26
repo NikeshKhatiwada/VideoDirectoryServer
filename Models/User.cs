@@ -22,5 +22,6 @@ namespace VideoDirectory_Server.Models
         public DateTime LastModifiedAt { get; set;}
         public DateTime SuspendedUntil { get; set; }
         public List<Channel> ManagedChannels { get; set; }
+        public List<Channel> FollowedChannels { get; set; }
     }
 }
