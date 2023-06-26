@@ -18,10 +18,10 @@ namespace VideoDirectory_Server.Models
         public string Image { get; set; }
         [Required]
         public string Password { get; set; }
+        public DateTime? SuspendedUntil { get; set; }
+        public List<Channel> ManagedChannel { get; set; }
+        public List<Channel> FollowedChannel { get; set; }
         public DateTime CreatedAt { get; set; }
-        public DateTime LastModifiedAt { get; set;}
-        public DateTime SuspendedUntil { get; set; }
-        public List<Channel> ManagedChannels { get; set; }
-        public List<Channel> FollowedChannels { get; set; }
+        public DateTime LastModifiedAt { get; set; }
     }
 }

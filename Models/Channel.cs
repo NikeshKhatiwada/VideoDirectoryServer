@@ -14,9 +14,9 @@ namespace VideoDirectory_Server.Models
         public string Description { get; set; }
         [Required]
         public string Url { get; set; }
+        public List<User> ManagingUser { get; set; }
+        public List<Channel> FollowingUser { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime LastUpdatedAt { get; set; }
-        public List<User> ManagingUsers { get; set; }
-        public List<Channel> FollowingUsers { get; set; }
     }
 }
