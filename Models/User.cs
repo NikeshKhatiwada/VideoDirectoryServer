@@ -5,6 +5,7 @@ namespace VideoDirectory_Server.Models
     public class User
     {
         [Required]
+        [Key]
         public Guid Id { get; set; }
         [Required]
         public string FirstName { get; set; }
@@ -19,9 +20,23 @@ namespace VideoDirectory_Server.Models
         [Required]
         public string Password { get; set; }
         public DateTime? SuspendedUntil { get; set; }
-        public List<Channel> ManagedChannel { get; set; }
-        public List<Channel> FollowedChannel { get; set; }
+        public ICollection<ManagingUserChannel> ManagingUserChannels { get; set; }
+        public ICollection<FollowingUserChannel> FollowingUserChannels { get; set; }
+        public ICollection<VideoView> VideoViews { get; set; }
+        public ICollection<VideoLike> VideoLikes { get; set; }
+        public ICollection<Message> SentMessages { get; set; }
+        public ICollection<Message> ReceivedMessages { get; set; }
         public DateTime CreatedAt { get; set; }
-        public DateTime LastModifiedAt { get; set; }
+        public DateTime LastUpdatedAt { get; set; }
+        
+        public User()
+        {
+            ManagingUserChannels = new List<ManagingUserChannel>();
+            FollowingUserChannels = new List<FollowingUserChannel>();
+            VideoViews = new List<VideoView>();
+            VideoLikes = new List<VideoLike>();
+            SentMessages = new List<Message>();
+            ReceivedMessages = new List<Message>();
+        }
     }
 }
