@@ -12,7 +12,13 @@ namespace VideoDirectory_Server.Models
         public Video Video { get; set; }
         [Required]
         public string Description { get; set; }
+        public ICollection<CommentLike> CommentLikes { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime LastUpdatedAt { get; set; }
+
+        public Comment()
+        {
+            CommentLikes = new List<CommentLike>();
+        }
     }
 }

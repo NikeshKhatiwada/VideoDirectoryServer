@@ -4,9 +4,11 @@ namespace VideoDirectory_Server.Models
 {
     public class VideoLike
     {
-        [Key, Required]
+        [Key]
+        public int Id { get; set; }
+        [Required]
         public User User { get; set; }
-        [Key, Required]
+        [Required]
         public Video Video { get; set; }
         [Required]
         public bool LikeDislike { get; set; }
