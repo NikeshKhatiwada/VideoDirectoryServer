@@ -122,7 +122,6 @@ namespace VideoDirectory_Server.Services
                 File.Move(outputFilePath, filePath);
             }
 
-            // May increase or decrease resolution
             if (!(aspectRatioNumerator == 0 || aspectRatioDenominator == 0))
             {
                 videoInfo = FFProbe.Analyse(filePath);
