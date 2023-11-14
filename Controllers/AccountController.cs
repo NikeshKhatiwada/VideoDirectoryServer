@@ -60,16 +60,6 @@ namespace VideoDirectory_Server.Controllers
             {
                 if (BC.Verify(userLoginDto.Password, user.Password))
                 {
-                    // Create a ClaimsPrincipal object for the authenticated user.
-
-                    //var claimIdentity = new ClaimsIdentity(new[]
-                    //    {
-                    //        new Claim(ClaimTypes.Name, user.UserName)
-                    //    }, CookieAuthenticationDefaults.AuthenticationScheme);
-                    //var principal = new ClaimsPrincipal(claimIdentity);
-                    //await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
-                    //HttpContext.Session.SetString("Username", user.UserName);
-
                     var secretKey = _configuration.GetValue<string>("Key:SecretKey");
                     var token = AuthTokenGenerator.GenerateAuthToken(user.UserName, secretKey);
                     return Ok(token);
@@ -86,20 +76,12 @@ namespace VideoDirectory_Server.Controllers
         {
             try
             {
-                //using (var reader = new StreamReader(Request.Body))
-                //{
-                //    var json = reader.ReadToEnd();
-                //    var userRegistrationDto = JsonSerializer.Deserialize<UserRegistrationDto>(json);
-
-                // Check if the user already exists in the database.
                 var existingUser = Context.Users.FirstOrDefault(u => u.UserName == userRegistrationDto.UserName);
                 if (existingUser != null)
                 {
-                    // Return a failure message indicating that the user already exists.
                     return Conflict("User already exists.");
                 }
 
-                // Create a new user.
                 var newUser = new User
                 {
                     Id = Guid.NewGuid(),
@@ -133,24 +115,16 @@ namespace VideoDirectory_Server.Controllers
                     newUser.Image = fileName;
                 }
 
-                // Save the user to the database.
                 Context.Users.Add(newUser);
                 Context.SaveChanges();
 
-                // Return a success message.
                 return Ok("Registration successful.");
-                //}
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
         }
-
-        //public IActionResult GetImage()
-        //{
-        //    var image = this.Context.Users.Where(User => User.UserName == HttpContext.Session.GetString("Username")).First().Image;
-        //}
 
         [HttpGet]
         [AllowAnonymous]
@@ -162,7 +136,6 @@ namespace VideoDirectory_Server.Controllers
 
         private User GetUser(string username)
         {
-            // TODO: Implement this method to get the user from the database.
             return this.Context.Users.Where(User => User.UserName == username).FirstOrDefault();
         }
 
