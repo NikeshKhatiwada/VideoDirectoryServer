@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VideoDirectory_Server.Data;
@@ -11,9 +12,11 @@ using VideoDirectory_Server.Data;
 namespace VideoDirectory_Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231027090410_M12")]
+    partial class M12
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -339,18 +342,6 @@ namespace VideoDirectory_Server.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SystemAdmins");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("ba3d69ee-3e96-4899-9ba3-908cbe0312f4"),
-                            CreatedAt = new DateTime(2023, 10, 27, 17, 56, 49, 119, DateTimeKind.Utc).AddTicks(394),
-                            FirstName = "Nikesh",
-                            LastName = "Khatiwada",
-                            LastUpdatedAt = new DateTime(2023, 10, 27, 17, 56, 49, 119, DateTimeKind.Utc).AddTicks(399),
-                            Password = "$2a$11$lZMgpdQHizZy0EDxREU7kuGegApWKXe1FsAI8EGKQ4GvYrB60hUvG",
-                            Username = "NK"
-                        });
                 });
 
             modelBuilder.Entity("VideoDirectory_Server.Models.Tag", b =>

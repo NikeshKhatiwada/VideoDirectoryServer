@@ -1,4 +1,6 @@
 import whisper
+# import argparse
+
 model = whisper.load_model("small")
 
 def convert_time_format(input_time):
@@ -20,7 +22,7 @@ def transcribe_audio(audio_file_name):
     sorted_segments = sorted(result["segments"], key=lambda x: x["start"])
     transcript = ""
     
-    i = 0;
+    i = 1;
     for segment in sorted_segments:
         start_time = segment["start"]
         end_time = segment["end"]
@@ -33,6 +35,17 @@ def transcribe_audio(audio_file_name):
         transcript += f"{text}\n"
         transcript += "\n"
 
-    return (language, transcript)
+    print(language + "..." + transcript)
+    return language, transcript
+
+# if __name__ == "__main__":
+#     parser = argparse.ArgumentParser(description="Transcribe audio and format time.")
+#     parser.add_argument("audio_file_name", help="Name of the audio file to transcribe")
+
+#     args = parser.parse_args()
+
+#     language, transcript = transcribe_audio(args.audio_file_name)
+#     print(f"Language: {language}")
+#     print(transcript)
 
 __all__ = ['transcribe_audio']

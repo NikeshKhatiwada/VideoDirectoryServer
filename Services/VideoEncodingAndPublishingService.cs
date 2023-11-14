@@ -86,9 +86,9 @@ namespace VideoDirectory_Server.Services
             {
                 try
                 {
-
                     int targetWidth = originalWidth;
                     int targetHeight = originalHeight;
+
                     if (!(originalWidth <= targetWidthValue && originalHeight <= targetHeightValue))
                     {
                         targetWidth = isPortrait ? targetWidthValue : (int)Math.Round((double)targetWidthValue * originalWidth / originalHeight);
@@ -96,6 +96,14 @@ namespace VideoDirectory_Server.Services
 
                         targetHeight = isPortrait ? (int)Math.Round((double)targetHeightValue * originalHeight / originalWidth) : targetHeightValue;
                         targetHeight = targetHeight % 2 == 0 ? targetHeight : targetHeight - 1;
+                    }
+
+                    var originalResolution = Math.Min(originalHeight, originalWidth) + "p";
+                    var videoResolution = Math.Min(targetHeight, targetWidth) + "p";
+
+                    if (int.Parse(originalResolution.TrimEnd('p')) < int.Parse(videoResolution.TrimEnd('p')))
+                    {
+                        continue;
                     }
 
                     double targetFrameRate = Math.Min(originalFrameRate, targetFrameRateValue);
@@ -117,8 +125,6 @@ namespace VideoDirectory_Server.Services
                         .WithFastStart())
                     .ProcessSynchronously();
 
-                    var videoResolution = Math.Min(targetHeight, targetWidth) + "p";
-
                     string ipfsHash = await UploadToIPFS(outputFilePath);
                     video = dbContext.Videos.Include(v => v.VideoHashes).FirstOrDefault(v => v.Url == videoUrl);
 
@@ -131,8 +137,13 @@ namespace VideoDirectory_Server.Services
                             {
                                 video.VideoHashes.Remove(videoHash);
                                 dbContext.Videos.Update(video);
+                                dbContext.SaveChanges();
+
+                                await UnpinFromIPFS(videoHash.Hash);
                             }
                         }
+
+                        await RunIPFSGarbageCollection();
                     }
 
                     var newVideoHash = new VideoHash
@@ -147,13 +158,6 @@ namespace VideoDirectory_Server.Services
                     dbContext.Videos.Update(video);
                     await dbContext.SaveChangesAsync();
 
-                    video.IsPublished = true;
-                    video.PublishedAt = DateTime.UtcNow;
-                    video.LastUpdatedAt = DateTime.UtcNow;
-
-                    dbContext.Videos.Update(video);
-                    await dbContext.SaveChangesAsync();
-
                     File.Delete(outputFilePath);
                 }
                 catch (Exception ex)
@@ -161,6 +165,13 @@ namespace VideoDirectory_Server.Services
                     Console.WriteLine(ex);
                 }
             }
+
+            video.IsPublished = true;
+            video.PublishedAt = DateTime.UtcNow;
+            video.LastUpdatedAt = DateTime.UtcNow;
+
+            dbContext.Videos.Update(video);
+            await dbContext.SaveChangesAsync();
 
             _transcriptionService.AddVideoUrl(videoUrl);
             if (!(_transcriptionService.IsRunning))
@@ -192,6 +203,44 @@ namespace VideoDirectory_Server.Services
                     {
                         throw new Exception($"Failed to upload to IPFS. StatusCode: {response.StatusCode}");
                     }
+                }
+            }
+        }
+
+        private async Task UnpinFromIPFS(string ipfsHash)
+        {
+            using (var client = new HttpClient())
+            {
+                string apiEndpoint = "http://localhost:5001/api/v0/";
+
+                var response = await client.PostAsync(apiEndpoint + "pin/rm" + $"?arg={ipfsHash}", null);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("Video unpinned successfully.");
+                }
+                else
+                {
+                    throw new Exception($"Failed to unpin from IPFS Desktop. StatusCode: {response.StatusCode}");
+                }
+            }
+        }
+
+        private async Task RunIPFSGarbageCollection()
+        {
+            using (var client = new HttpClient())
+            {
+                string apiEndpoint = "http://localhost:5001/api/v0/";
+
+                var response = await client.PostAsync(apiEndpoint + "repo/gc", null);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("Unpinned File(s) removed.");
+                }
+                else
+                {
+                    throw new Exception($"Failed to remove from IPFS Desktop. StatusCode: {response.StatusCode}");
                 }
             }
         }
