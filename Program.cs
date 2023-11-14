@@ -53,7 +53,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 builder.Services.AddSingleton<AuthTokenGenerator>();
 builder.Services.AddSingleton<VideoUrlGenerator>();
-builder.Services.AddScoped<VideoRecommendationService>();
 builder.Services.AddSingleton<InitialVideoEncodingService>();
 builder.Services.AddSingleton<VideoEncodingAndPublishingService>();
 builder.Services.AddSingleton<VideoEditingService>();

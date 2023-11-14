@@ -145,7 +145,7 @@ namespace VideoDirectory_Server.Controllers
                     return Ok("Channel reported successfully.");
                 }
 
-                return BadRequest("Invalid request type.");
+                return BadRequest("Invalid content type.")
             }
             catch (Exception ex)
             {

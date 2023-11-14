@@ -807,19 +807,7 @@ namespace VideoDirectory_Server.Controllers
                         return Unauthorized();
                     }
 
-                    var channelPrivilege = managedChannels.FirstOrDefault(mc => mc.ChannelId == channel.Id).Privilege;
-
-                    bool isOwnerOfChannel = false;
-
-                    if (channelPrivilege == 'O')
-                    {
-                        isOwnerOfChannel = true;
-                    }
-
-                    channel = this.Context.Channels
-                        .Include(c => c.ManagingUserChannels)
-                        .ThenInclude(muc => muc.User)
-                        .FirstOrDefault(c => c.Url == channelUrl);
+                    channel = this.Context.Channels.Include(c => c.ManagingUserChannels).FirstOrDefault(c => c.Url == channelUrl);
                     var managedChannelManagers = channel.ManagingUserChannels;
 
                     if (managedChannelManagers != null)
@@ -827,12 +815,6 @@ namespace VideoDirectory_Server.Controllers
                         List<object> ChannelManagerItems = new List<object>();
                         foreach (ManagingUserChannel managingUserChannel in managedChannelManagers)
                         {
-                            bool isModificationAllowed = false;
-                            if (isOwnerOfChannel && managingUserChannel.Privilege == 'A')
-                            {
-                                isModificationAllowed = true;
-                            }
-
                             string uploadPath = Path.Combine("", "Avatars");
                             string fileName = managingUserChannel.User.Image;
                             string filePath = Path.Combine(uploadPath, fileName);
@@ -857,11 +839,10 @@ namespace VideoDirectory_Server.Controllers
 
                             var channelManagerItemModel = new
                             {
-                                Name = managingUserChannel.User.FirstName + managingUserChannel.User.LastName,
-                                UserName = managingUserChannel.User.UserName,
+                                Name = user.FirstName + user.LastName,
+                                UserName = user.UserName,
                                 Image = base64Image,
-                                Privilege = managingUserChannel.Privilege,
-                                IsModificationAllowed = isModificationAllowed
+                                Privilege = managingUserChannel.Privilege
                             };
 
                             ChannelManagerItems.Add(channelManagerItemModel);

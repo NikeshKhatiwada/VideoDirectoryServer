@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using System.Text.Json;
@@ -23,7 +22,6 @@ namespace VideoDirectory_Server.Controllers
         private ApplicationDbContext? Context { get; }
         private readonly IConfiguration _configuration;
 
-        private readonly VideoRecommendationService _videoRecommendationService;
         private readonly InitialVideoEncodingService _initialEncodingService;
         private readonly VideoEncodingAndPublishingService _encodingAndPublishingService;
         private readonly VideoEditingService _videoEditingService;
@@ -33,7 +31,6 @@ namespace VideoDirectory_Server.Controllers
 
         public VideoController(ApplicationDbContext context, IConfiguration configuration,
             VideoUrlGenerator videoUrlGenerator,
-            VideoRecommendationService videoRecommendationService,
             InitialVideoEncodingService encodingService,
             VideoEncodingAndPublishingService encodingAndPublishingService,
             VideoEditingService videoEditingService,
@@ -42,7 +39,6 @@ namespace VideoDirectory_Server.Controllers
             this.Context = context;
             _configuration = configuration;
             VideoUrlGenerator = videoUrlGenerator;
-            _videoRecommendationService = videoRecommendationService;
             _initialEncodingService = encodingService;
             _encodingAndPublishingService = encodingAndPublishingService;
             _videoEditingService = videoEditingService;
@@ -243,133 +239,6 @@ namespace VideoDirectory_Server.Controllers
         }
 
         [HttpGet]
-        [Route("/videos/suggested")]
-        public IActionResult GetSuggestedVideos()
-        {
-            try
-            {
-                string secretKey = _configuration.GetSection("Key:SecretKey").Value;
-                var key = Encoding.UTF8.GetBytes(secretKey);
-
-                var validationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.FromHours(24)
-                };
-
-                var authorizationHeader = HttpContext.Request.Headers["Authorization"].FirstOrDefault();
-                if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer "))
-                {
-                    return Unauthorized();
-                }
-
-                var token = authorizationHeader.Substring("Bearer ".Length);
-
-                var tokenHandler = new JwtSecurityTokenHandler();
-
-                SecurityToken validatedToken;
-                var principal = tokenHandler.ValidateToken(token, validationParameters, out validatedToken);
-
-                var usernameClaim = principal.FindFirst("Username");
-                if (usernameClaim == null)
-                {
-                    return Unauthorized();
-                }
-
-                var username = usernameClaim.Value;
-
-                var user = this.Context.Users.FirstOrDefault(u => u.UserName == username);
-                if (user == null)
-                {
-                    return Unauthorized();
-                }
-
-                List<Video> suggestedVideos = _videoRecommendationService.GetRecommendedVideos(user.Id.ToString());
-
-                if (!(suggestedVideos.Any()))
-                {
-                    return NotFound("No videos found.");
-                }
-
-                List<object> SuggestedVideoItems = new List<object>();
-                foreach (Video video in suggestedVideos)
-                {
-                    string thumbnailUploadPath = Path.Combine("", "Thumbnails");
-                    string thumbnailFileName = video.Thumbnail;
-                    string thumbnailFilePath = Path.Combine(thumbnailUploadPath, thumbnailFileName);
-                    FileInfo thumbnailFileInfo = new FileInfo(thumbnailFilePath);
-                    if (!thumbnailFileInfo.Exists)
-                    {
-                        return NotFound("Thumbnail not found.");
-                    }
-
-                    byte[] thubnailBytes;
-
-                    using (FileStream fileStream = thumbnailFileInfo.OpenRead())
-                    {
-                        using (MemoryStream memoryStream = new MemoryStream())
-                        {
-                            fileStream.CopyTo(memoryStream);
-                            thubnailBytes = memoryStream.ToArray();
-                        }
-                    }
-
-                    string base64Thumbnail = Convert.ToBase64String(thubnailBytes);
-
-                    string uploadPath = Path.Combine("", "Channels");
-                    string fileName = video.Channel.Image;
-                    string filePath = Path.Combine(uploadPath, fileName);
-                    FileInfo fileInfo = new FileInfo(filePath);
-                    if (!fileInfo.Exists)
-                    {
-                        return NotFound("Image not found.");
-                    }
-
-                    byte[] imageBytes;
-
-                    using (FileStream fileStream = fileInfo.OpenRead())
-                    {
-                        using (MemoryStream memoryStream = new MemoryStream())
-                        {
-                            fileStream.CopyTo(memoryStream);
-                            imageBytes = memoryStream.ToArray();
-                        }
-                    }
-
-                    string base64Image = Convert.ToBase64String(imageBytes);
-
-                    var VideoItemModel = new
-                    {
-                        Thumbnail = base64Thumbnail,
-                        VideoUrl = video.Url,
-                        Title = video.Title,
-                        ChannelName = video.Channel.Name,
-                        ChannelImage = base64Image,
-                        ChannelUrl = video.Channel.Url,
-                        PublishedAt = video.PublishedAt
-                    };
-
-                    SuggestedVideoItems.Add(VideoItemModel);
-                }
-
-                if (SuggestedVideoItems.Count > 0)
-                {
-                    return Ok(SuggestedVideoItems);
-                }
-
-                return NotFound("No videos found.");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-
-        [HttpGet]
         [Route("/videos/following")]
         public IActionResult GetFollowingChannelVideos()
         {
@@ -422,7 +291,6 @@ namespace VideoDirectory_Server.Controllers
 
                 List<Video> followedChannelsVideos = user.FollowingUserChannels
                     .SelectMany(ufc => ufc.Channel.Videos)
-                    .Where(v => v.IsPublished == true)
                     .ToList();
 
                 if (!(followedChannelsVideos.Any()))
@@ -760,127 +628,6 @@ namespace VideoDirectory_Server.Controllers
             }
         }
 
-        [HttpPut]
-        [Route("/video/{videoUrl}/managed/details")]
-        public IActionResult UpdateManagedVideoDetails(EditVideoInfoDto videoInfoDto, string videoUrl)
-        {
-            try
-            {
-                string secretKey = _configuration.GetSection("Key:SecretKey").Value;
-                var key = Encoding.UTF8.GetBytes(secretKey);
-
-                var validationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.FromHours(24)
-                };
-
-                var authorizationHeader = HttpContext.Request.Headers["Authorization"].FirstOrDefault();
-                if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer "))
-                {
-                    return Unauthorized();
-                }
-
-                var token = authorizationHeader.Substring("Bearer ".Length);
-
-                var tokenHandler = new JwtSecurityTokenHandler();
-
-                SecurityToken validatedToken;
-                var principal = tokenHandler.ValidateToken(token, validationParameters, out validatedToken);
-
-                var usernameClaim = principal.FindFirst("Username");
-                if (usernameClaim == null)
-                {
-                    return Unauthorized();
-                }
-
-                var username = usernameClaim.Value;
-
-                var user = this.Context.Users.FirstOrDefault(u => u.UserName == username);
-                if (user == null)
-                {
-                    return Unauthorized();
-                }
-
-                user = this.Context.Users.Include(u => u.ManagingUserChannels).FirstOrDefault(u => u.UserName == username);
-
-                var video = this.Context.Videos.Include(v => v.Channel).FirstOrDefault(v => v.Url == videoUrl);
-                if (video == null)
-                {
-                    return NotFound("Video doesn't exist.");
-                }
-
-                var managedChannels = user.ManagingUserChannels;
-                var isManagerOfChannel = managedChannels.Any(mc => mc.ChannelId == video.Channel.Id);
-
-                if (!isManagerOfChannel)
-                {
-                    return Unauthorized();
-                }
-
-                video = this.Context.Videos
-                    .Include(v => v.AssociatedVideoTags)
-                    .ThenInclude(avt => avt.Tag)
-                    .FirstOrDefault(v => v.Url == videoUrl);
-
-                foreach(var associatedTag in video.AssociatedVideoTags)
-                {
-                    video.AssociatedVideoTags.Remove(associatedTag);
-                }
-
-                Context.Videos.Update(video);
-                Context.SaveChanges();
-
-                video = this.Context.Videos
-                    .Include(v => v.AssociatedVideoTags)
-                    .FirstOrDefault(v => v.Url == videoUrl);
-
-                foreach (string tagName in videoInfoDto.Tags)
-                {
-                    var isAlreadyInDatabase = this.Context.Tags.Any(t => t.Name == tagName);
-                    if (!(isAlreadyInDatabase))
-                    {
-                        var newTag = new Tag
-                        {
-                            Name = tagName,
-                            CreatedAt = DateTime.UtcNow,
-                            LastUpdatedAt = DateTime.UtcNow
-                        };
-                        Context.Tags.Add(newTag);
-                        Context.SaveChanges();
-                    }
-
-                    var tag = this.Context.Tags.FirstOrDefault(t => t.Name == tagName);
-                    var associatedVideoTag = new AssociatedVideoTag
-                    {
-                        VideoId = video.Id,
-                        TagId = tag.Id,
-                        CreatedAt = tag.CreatedAt,
-                        LastUpdatedAt = tag.LastUpdatedAt
-                    };
-                    video.AssociatedVideoTags.Add(associatedVideoTag);
-                }
-
-                video.Title = videoInfoDto.Title;
-                video.Description = videoInfoDto.Description;
-
-                video.LastUpdatedAt = DateTime.UtcNow;
-
-                Context.Videos.Update(video);
-                Context.SaveChanges();
-
-                return Ok("Video info update successful.");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-
         [HttpGet]
         [Route("/video/{videoUrl}/links")]
         public IActionResult GetVideoLinks(string videoUrl)
@@ -943,7 +690,6 @@ namespace VideoDirectory_Server.Controllers
                         var videoLinkItemViewModel = new
                         {
                             Resolution = videoHash.Resolution,
-                            //Link = videoHash + ".ipfs.localhost:8081/?filename=" + videoHash
                             Link = "https://ipfs.io/ipfs/" + videoHash.Hash
                         };
                         VideoLinkItems.Add(videoLinkItemViewModel);
@@ -952,74 +698,6 @@ namespace VideoDirectory_Server.Controllers
                     return Ok(VideoLinkItems);
                 }
                 return NotFound("No video links found.");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-
-        [HttpGet]
-        [Route("/video/{videoUrl}/transcript")]
-        public IActionResult GetVideoTranscript(string videoUrl)
-        {
-            try
-            {
-                string secretKey = _configuration.GetSection("Key:SecretKey").Value;
-                var key = Encoding.UTF8.GetBytes(secretKey);
-
-                var validationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.FromHours(24)
-                };
-
-                var authorizationHeader = HttpContext.Request.Headers["Authorization"].FirstOrDefault();
-                if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer "))
-                {
-                    return Unauthorized();
-                }
-
-                var token = authorizationHeader.Substring("Bearer ".Length);
-
-                var tokenHandler = new JwtSecurityTokenHandler();
-
-                SecurityToken validatedToken;
-                var principal = tokenHandler.ValidateToken(token, validationParameters, out validatedToken);
-
-                var usernameClaim = principal.FindFirst("Username");
-                if (usernameClaim == null)
-                {
-                    return Unauthorized();
-                }
-
-                var username = usernameClaim.Value;
-
-                var user = this.Context.Users.FirstOrDefault(u => u.UserName == username);
-                if (user == null)
-                {
-                    return Unauthorized();
-                }
-
-                var video = this.Context.Videos.FirstOrDefault(v => v.Url == videoUrl);
-
-                string transcriptString = "No transcript available to show, currently.";
-
-                var videoTranscript = this.Context.Transcripts.FirstOrDefault(vt => vt.VideoId == video.Id);
-
-                if (videoTranscript != null)
-                {
-                    transcriptString = "Language: " + CultureInfo.GetCultureInfo($"{videoTranscript.Language}").EnglishName
-                        + "/n/n"
-                        + "Transcript:/n"
-                        + videoTranscript.Content;
-                }
-
-                return Ok(transcriptString);
             }
             catch (Exception ex)
             {
@@ -1724,101 +1402,6 @@ namespace VideoDirectory_Server.Controllers
                 }
 
                 return Ok("Video will be applied filters.");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-
-        [HttpPost]
-        [Route("/video/views/")]
-        public IActionResult AddVideoView(string videoUrl)
-        {
-            try
-            {
-                string secretKey = _configuration.GetSection("Key:SecretKey").Value;
-                var key = Encoding.UTF8.GetBytes(secretKey);
-
-                var validationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.FromHours(24)
-                };
-
-                var authorizationHeader = HttpContext.Request.Headers["Authorization"].FirstOrDefault();
-                if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer "))
-                {
-                    return Unauthorized();
-                }
-
-                var token = authorizationHeader.Substring("Bearer ".Length);
-
-                var tokenHandler = new JwtSecurityTokenHandler();
-
-                SecurityToken validatedToken;
-                var principal = tokenHandler.ValidateToken(token, validationParameters, out validatedToken);
-
-                var usernameClaim = principal.FindFirst("Username");
-                if (usernameClaim == null)
-                {
-                    return Unauthorized();
-                }
-
-                var username = usernameClaim.Value;
-
-                var user = this.Context.Users.FirstOrDefault(u => u.UserName == username);
-                if (user == null)
-                {
-                    return Unauthorized();
-                }
-
-                var video = this.Context.Videos.Include(v => v.Channel).FirstOrDefault(v => v.Url == videoUrl);
-                user = this.Context.Users.Include(u => u.ManagingUserChannels).FirstOrDefault(u => u.UserName == username);
-
-                var managedChannels = user.ManagingUserChannels;
-                var isManagerOfChannel = managedChannels.Any(mc => mc.ChannelId == video.Channel.Id);
-
-                if (isManagerOfChannel)
-                {
-                    return BadRequest();
-                }
-
-                video = this.Context.Videos.Include(v => v.VideoViews).FirstOrDefault(v => v.Url == videoUrl);
-
-                if (video.VideoViews.Any(vv => vv.User == user))
-                {
-                    var videoView = video.VideoViews.FirstOrDefault(vl => vl.User == user);
-                    video.VideoViews.Remove(videoView);
-                    Context.Videos.Update(video);
-                    Context.SaveChanges();
-                    videoView.ViewCount += 1;
-                    videoView.LastUpdatedAt = DateTime.UtcNow;
-                    video.VideoViews.Add(videoView);
-                    Context.Videos.Update(video);
-                    Context.SaveChanges();
-                }
-
-                else
-                {
-                    var newVideoView = new VideoView
-                    {
-                        User = user,
-                        Video = video,
-                        ViewCount = 1,
-                        CreatedAt = DateTime.UtcNow,
-                        LastUpdatedAt = DateTime.UtcNow
-                    };
-                    video.VideoViews.Add(newVideoView);
-                    Context.Videos.Update(video);
-                    Context.SaveChanges();
-                }
-
-                return Ok();
             }
             catch (Exception ex)
             {

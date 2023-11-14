@@ -17,7 +17,7 @@ namespace VideoDirectory_Server.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.13")
+                .HasAnnotation("ProductVersion", "7.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -87,39 +87,6 @@ namespace VideoDirectory_Server.Migrations
                     b.ToTable("Channels");
                 });
 
-            modelBuilder.Entity("VideoDirectory_Server.Models.ChannelReport", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<Guid>("ChannelId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("LastUpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("ReporterUserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChannelId");
-
-                    b.HasIndex("ReporterUserId");
-
-                    b.ToTable("ChannelReports");
-                });
-
             modelBuilder.Entity("VideoDirectory_Server.Models.Comment", b =>
                 {
                     b.Property<int>("Id")
@@ -183,39 +150,6 @@ namespace VideoDirectory_Server.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("CommentLike");
-                });
-
-            modelBuilder.Entity("VideoDirectory_Server.Models.CommentReport", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CommentId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("LastUpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("ReporterUserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CommentId");
-
-                    b.HasIndex("ReporterUserId");
-
-                    b.ToTable("CommentReports");
                 });
 
             modelBuilder.Entity("VideoDirectory_Server.Models.FollowingUserChannel", b =>
@@ -308,51 +242,6 @@ namespace VideoDirectory_Server.Migrations
                     b.ToTable("Messages");
                 });
 
-            modelBuilder.Entity("VideoDirectory_Server.Models.SystemAdmin", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("LastUpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SystemAdmins");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("ba3d69ee-3e96-4899-9ba3-908cbe0312f4"),
-                            CreatedAt = new DateTime(2023, 10, 27, 17, 56, 49, 119, DateTimeKind.Utc).AddTicks(394),
-                            FirstName = "Nikesh",
-                            LastName = "Khatiwada",
-                            LastUpdatedAt = new DateTime(2023, 10, 27, 17, 56, 49, 119, DateTimeKind.Utc).AddTicks(399),
-                            Password = "$2a$11$lZMgpdQHizZy0EDxREU7kuGegApWKXe1FsAI8EGKQ4GvYrB60hUvG",
-                            Username = "NK"
-                        });
-                });
-
             modelBuilder.Entity("VideoDirectory_Server.Models.Tag", b =>
                 {
                     b.Property<int>("Id")
@@ -391,7 +280,7 @@ namespace VideoDirectory_Server.Migrations
 
                     b.HasKey("VideoId");
 
-                    b.ToTable("Transcripts");
+                    b.ToTable("Transcript");
                 });
 
             modelBuilder.Entity("VideoDirectory_Server.Models.User", b =>
@@ -436,39 +325,6 @@ namespace VideoDirectory_Server.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("VideoDirectory_Server.Models.UserReport", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("LastUpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("ReportedUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ReporterUserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReportedUserId");
-
-                    b.HasIndex("ReporterUserId");
-
-                    b.ToTable("UserReports");
                 });
 
             modelBuilder.Entity("VideoDirectory_Server.Models.Video", b =>
@@ -585,71 +441,6 @@ namespace VideoDirectory_Server.Migrations
                     b.ToTable("VideoLike");
                 });
 
-            modelBuilder.Entity("VideoDirectory_Server.Models.VideoReport", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("LastUpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("ReporterUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("VideoId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReporterUserId");
-
-                    b.HasIndex("VideoId");
-
-                    b.ToTable("VideoReports");
-                });
-
-            modelBuilder.Entity("VideoDirectory_Server.Models.VideoView", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("LastUpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("VideoId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ViewCount")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("VideoId");
-
-                    b.ToTable("VideoView");
-                });
-
             modelBuilder.Entity("VideoDirectory_Server.Models.AssociatedVideoTag", b =>
                 {
                     b.HasOne("VideoDirectory_Server.Models.Tag", "Tag")
@@ -669,25 +460,6 @@ namespace VideoDirectory_Server.Migrations
                     b.Navigation("Video");
                 });
 
-            modelBuilder.Entity("VideoDirectory_Server.Models.ChannelReport", b =>
-                {
-                    b.HasOne("VideoDirectory_Server.Models.Channel", "Channel")
-                        .WithMany()
-                        .HasForeignKey("ChannelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("VideoDirectory_Server.Models.User", "ReporterUser")
-                        .WithMany()
-                        .HasForeignKey("ReporterUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Channel");
-
-                    b.Navigation("ReporterUser");
-                });
-
             modelBuilder.Entity("VideoDirectory_Server.Models.Comment", b =>
                 {
                     b.HasOne("VideoDirectory_Server.Models.User", "User")
@@ -697,7 +469,7 @@ namespace VideoDirectory_Server.Migrations
                         .IsRequired();
 
                     b.HasOne("VideoDirectory_Server.Models.Video", "Video")
-                        .WithMany("Comments")
+                        .WithMany()
                         .HasForeignKey("VideoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -724,25 +496,6 @@ namespace VideoDirectory_Server.Migrations
                     b.Navigation("Comment");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("VideoDirectory_Server.Models.CommentReport", b =>
-                {
-                    b.HasOne("VideoDirectory_Server.Models.Comment", "Comment")
-                        .WithMany()
-                        .HasForeignKey("CommentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("VideoDirectory_Server.Models.User", "ReporterUser")
-                        .WithMany()
-                        .HasForeignKey("ReporterUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Comment");
-
-                    b.Navigation("ReporterUser");
                 });
 
             modelBuilder.Entity("VideoDirectory_Server.Models.FollowingUserChannel", b =>
@@ -813,25 +566,6 @@ namespace VideoDirectory_Server.Migrations
                     b.Navigation("Video");
                 });
 
-            modelBuilder.Entity("VideoDirectory_Server.Models.UserReport", b =>
-                {
-                    b.HasOne("VideoDirectory_Server.Models.User", "ReportedUser")
-                        .WithMany()
-                        .HasForeignKey("ReportedUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("VideoDirectory_Server.Models.User", "ReporterUser")
-                        .WithMany()
-                        .HasForeignKey("ReporterUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ReportedUser");
-
-                    b.Navigation("ReporterUser");
-                });
-
             modelBuilder.Entity("VideoDirectory_Server.Models.Video", b =>
                 {
                     b.HasOne("VideoDirectory_Server.Models.Channel", "Channel")
@@ -873,44 +607,6 @@ namespace VideoDirectory_Server.Migrations
                     b.Navigation("Video");
                 });
 
-            modelBuilder.Entity("VideoDirectory_Server.Models.VideoReport", b =>
-                {
-                    b.HasOne("VideoDirectory_Server.Models.User", "ReporterUser")
-                        .WithMany()
-                        .HasForeignKey("ReporterUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("VideoDirectory_Server.Models.Video", "Video")
-                        .WithMany()
-                        .HasForeignKey("VideoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ReporterUser");
-
-                    b.Navigation("Video");
-                });
-
-            modelBuilder.Entity("VideoDirectory_Server.Models.VideoView", b =>
-                {
-                    b.HasOne("VideoDirectory_Server.Models.User", "User")
-                        .WithMany("VideoViews")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("VideoDirectory_Server.Models.Video", "Video")
-                        .WithMany("VideoViews")
-                        .HasForeignKey("VideoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-
-                    b.Navigation("Video");
-                });
-
             modelBuilder.Entity("VideoDirectory_Server.Models.Channel", b =>
                 {
                     b.Navigation("FollowingUserChannels");
@@ -941,23 +637,18 @@ namespace VideoDirectory_Server.Migrations
                     b.Navigation("SentMessages");
 
                     b.Navigation("VideoLikes");
-
-                    b.Navigation("VideoViews");
                 });
 
             modelBuilder.Entity("VideoDirectory_Server.Models.Video", b =>
                 {
                     b.Navigation("AssociatedVideoTags");
 
-                    b.Navigation("Comments");
-
-                    b.Navigation("Transcript");
+                    b.Navigation("Transcript")
+                        .IsRequired();
 
                     b.Navigation("VideoHashes");
 
                     b.Navigation("VideoLikes");
-
-                    b.Navigation("VideoViews");
                 });
 #pragma warning restore 612, 618
         }

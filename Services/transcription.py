@@ -1,5 +1,6 @@
 import whisper
-model = whisper.load_model("small")
+
+model = whisper.load_model("base")
 
 def convert_time_format(input_time):
     seconds = int(input_time)
@@ -33,6 +34,6 @@ def transcribe_audio(audio_file_name):
         transcript += f"{text}\n"
         transcript += "\n"
 
-    return (language, transcript)
+    return language, transcript
 
-__all__ = ['transcribe_audio']
+#__all__ = ['transcribe_audio']

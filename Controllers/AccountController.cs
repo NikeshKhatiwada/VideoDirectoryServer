@@ -31,31 +31,13 @@ namespace VideoDirectory_Server.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        [Route("/system-admin/account/login")]
-        public IActionResult SystemAdminLogin(AdminLoginDto adminLoginDto)
-        {
-            var systemAdmin = GetAdmin(adminLoginDto.Username);
-
-            if (systemAdmin != null)
-            {
-                if (BC.Verify(adminLoginDto.Password, systemAdmin.Password))
-                {
-                    var secretKey = _configuration.GetValue<string>("Key:SecretKey");
-                    var token = AuthTokenGenerator.GenerateAuthToken(adminLoginDto.Username, secretKey);
-                    return Ok(token);
-                }
-            }
-
-            return Unauthorized();
-        }
-
-        [HttpPost]
-        [AllowAnonymous]
         [Route("/account/login")]
         public IActionResult Login(UserLoginDto userLoginDto)
         {
+            // Get the user from the database.
             var user = GetUser(userLoginDto.UserName);
 
+            // If the user exists, authenticate them.
             if (user != null)
             {
                 if (BC.Verify(userLoginDto.Password, user.Password))
@@ -76,6 +58,7 @@ namespace VideoDirectory_Server.Controllers
                 }
             }
 
+            // Return a failure message.
             return Unauthorized();
         }
 
@@ -164,11 +147,6 @@ namespace VideoDirectory_Server.Controllers
         {
             // TODO: Implement this method to get the user from the database.
             return this.Context.Users.Where(User => User.UserName == username).FirstOrDefault();
-        }
-
-        private SystemAdmin GetAdmin(string username)
-        {
-            return this.Context.SystemAdmins.Where(Admin => Admin.Username == username).FirstOrDefault();
         }
     }
 }

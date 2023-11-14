@@ -383,11 +383,7 @@ namespace VideoDirectory_Server.Controllers
                     List<object> ManagedChannelItems = new List<object>();
                     foreach (var channel in managedChannels)
                     {
-                        channel.Channel = this.Context.Channels
-                            .Include(c => c.Videos)
-                            .Include(c => c.FollowingUserChannels)
-                            .Where(c => c.Id == channel.ChannelId)
-                            .FirstOrDefault();
+                        channel.Channel = this.Context.Channels.Find(channel.ChannelId);
                         string uploadPath = Path.Combine("", "Channels");
                         string fileName = channel.Channel.Image;
                         string filePath = Path.Combine(uploadPath, fileName);

@@ -64,6 +64,7 @@ namespace VideoDirectory_Server.Services
                 return;
             }
 
+            // Get video resolution using FFMPEGCore
             var videoInfo = FFProbe.Analyse(filePath);
             int originalWidth = videoInfo.PrimaryVideoStream.Width;
             int originalHeight = videoInfo.PrimaryVideoStream.Height;
@@ -87,9 +88,11 @@ namespace VideoDirectory_Server.Services
             double targetFrameRate = Math.Min(originalFrameRate, 24);
             int targetAudioBitrate = Math.Min(originalAudioBitrate, (int)AudioQuality.Good);
 
+            // Create the output file path with the same location and name as the original file
             string outputFileName = Path.GetFileNameWithoutExtension(filePath) + "_" + Math.Min(targetHeight, targetWidth) + "p.mp4";
             string outputFilePath = Path.Combine(Path.GetDirectoryName(filePath), outputFileName);
 
+            // Set up the FFmpeg global options
             GlobalFFOptions.Configure(options => options.BinaryFolder = ffmpegPath);
 
             FFMpegArguments
@@ -115,11 +118,7 @@ namespace VideoDirectory_Server.Services
             foreach(var videoHash in video.VideoHashes)
             {
                 video.VideoHashes.Remove(videoHash);
-                await UnpinFromIPFS(videoHash.Hash);
             }
-
-            await RunIPFSGarbageCollection();
-
             var newVideoHash = new VideoHash
             {
                 Video = video,
@@ -158,44 +157,6 @@ namespace VideoDirectory_Server.Services
                     {
                         throw new Exception($"Failed to upload to IPFS. StatusCode: {response.StatusCode}");
                     }
-                }
-            }
-        }
-
-        private async Task UnpinFromIPFS(string ipfsHash)
-        {
-            using (var client = new HttpClient())
-            {
-                string apiEndpoint = "http://localhost:5001/api/v0/";
-
-                var response = await client.PostAsync(apiEndpoint + "pin/rm" + $"?arg={ipfsHash}", null);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine("Video unpinned successfully.");
-                }
-                else
-                {
-                    throw new Exception($"Failed to unpin from IPFS Desktop. StatusCode: {response.StatusCode}");
-                }
-            }
-        }
-
-        private async Task RunIPFSGarbageCollection()
-        {
-            using (var client = new HttpClient())
-            {
-                string apiEndpoint = "http://localhost:5001/api/v0/";
-
-                var response = await client.PostAsync(apiEndpoint + "repo/gc", null);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine("Unpinned File(s) removed.");
-                }
-                else
-                {
-                    throw new Exception($"Failed to remove from IPFS Desktop. StatusCode: {response.StatusCode}");
                 }
             }
         }
