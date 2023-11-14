@@ -31,6 +31,19 @@ public partial class ApplicationDbContext : DbContext
             .WithOne(m => m.Receiver)
             .HasForeignKey(m => m.ReceiverId);
 
+        modelBuilder.Entity<SystemAdmin>().HasData(
+            new SystemAdmin
+            {
+                Id = Guid.NewGuid(),
+                Username = "NK",
+                FirstName = "Nikesh",
+                LastName = "Khatiwada",
+                Password = BCrypt.Net.BCrypt.HashPassword("NikeshKhatiwada"),
+                CreatedAt = DateTime.UtcNow,
+                LastUpdatedAt = DateTime.UtcNow
+            }
+        );
+
         OnModelCreatingPartial(modelBuilder);
     }
 

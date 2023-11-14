@@ -45,6 +45,10 @@ namespace VideoDirectory_Server.Services
                                 dbContext);
                         }
                     }
+                    else
+                    {
+                        await Task.Delay(10000);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -190,7 +194,12 @@ namespace VideoDirectory_Server.Services
             {
                 video.VideoHashes.Remove(videoHash);
                 dbContext.Videos.Update(video);
+                dbContext.SaveChanges();
+
+                await UnpinFromIPFS(videoHash.Hash);
             }
+
+            await RunIPFSGarbageCollection();
 
             var newVideoHash = new VideoHash
             {
@@ -229,6 +238,44 @@ namespace VideoDirectory_Server.Services
                     {
                         throw new Exception($"Failed to upload to IPFS. StatusCode: {response.StatusCode}");
                     }
+                }
+            }
+        }
+
+        private async Task UnpinFromIPFS(string ipfsHash)
+        {
+            using (var client = new HttpClient())
+            {
+                string apiEndpoint = "http://localhost:5001/api/v0/";
+
+                var response = await client.PostAsync(apiEndpoint + "pin/rm" + $"?arg={ipfsHash}", null);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("Video unpinned successfully.");
+                }
+                else
+                {
+                    throw new Exception($"Failed to unpin from IPFS Desktop. StatusCode: {response.StatusCode}");
+                }
+            }
+        }
+
+        private async Task RunIPFSGarbageCollection()
+        {
+            using (var client = new HttpClient())
+            {
+                string apiEndpoint = "http://localhost:5001/api/v0/";
+
+                var response = await client.PostAsync(apiEndpoint + "repo/gc", null);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine("Unpinned File(s) removed.");
+                }
+                else
+                {
+                    throw new Exception($"Failed to remove from IPFS Desktop. StatusCode: {response.StatusCode}");
                 }
             }
         }
