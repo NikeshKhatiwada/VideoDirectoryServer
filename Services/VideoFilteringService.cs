@@ -2,6 +2,9 @@
 using FFMpegCore.Enums;
 using Microsoft.EntityFrameworkCore;
 using OpenCvSharp;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Processing.Processors.Filters;
 using SkiaSharp;
 using System;
@@ -61,9 +64,9 @@ namespace VideoDirectory_Server.Services
             }
         }
 
-        public async Task ApplyVideoFilters(string videoUrl, 
-            char artisticFilterType, char colorFilterType, 
-            int brightnessValue, int contrastValue, int saturationValue, 
+        public async Task ApplyVideoFilters(string videoUrl,
+            char artisticFilterType, char colorFilterType,
+            int brightnessValue, int contrastValue, int saturationValue,
             ApplicationDbContext dbContext)
         {
             var video = dbContext.Videos.FirstOrDefault(v => v.Url == videoUrl);
